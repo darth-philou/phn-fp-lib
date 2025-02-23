@@ -1,5 +1,5 @@
 {
-    "name": "phn-fp-lib",
+    "name": "@darth-philou/phn-fp-lib",
     "version": "1.0.0",
     "description": "Librairie de types abstraits et d'utilitaires pour la programmation fonctionnelle en JavaScript",
     "main": "dist/index.js",
@@ -14,6 +14,10 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/darth-philou/phn-fp-lib.git"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://npm.pkg.github.com/"
     },
     "keywords": [
         "JavaScript",
