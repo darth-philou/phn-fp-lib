@@ -38,7 +38,7 @@ jobs:
           # Change publish registry
           echo "$(jq '.publishConfig.registry = "https://npm.pkg.github.com"' package.json)" > package.json
           # Add organisation scope to package name
-          echo "$(jq '.name = "@scope/package"' package.json)" > package.json
+          echo "$(jq '.name = "@darth-philou/package"' package.json)" > package.json
           # And publish this boy
           npm publish --@scope:registry=https://npm.pkg.github.com
         env:
