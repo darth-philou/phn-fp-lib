@@ -1,0 +1,57 @@
+{
+    "name": "phn-fp-lib",
+    "version": "1.0.0",
+    "description": "Librairie de types abstraits et d'utilitaires pour la programmation fonctionnelle en JavaScript",
+    "main": "index.js",
+    "scripts": {
+        "test": "npm test",
+        "prepare": "husky"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/darth-philou/phn-fp-lib.git"
+    },
+    "keywords": [
+        "JavaScript",
+        "Functionnal",
+        "ADT"
+    ],
+    "author": "Philippe Herlin",
+    "license": "GPL-3.0-or-later",
+    "bugs": {
+        "url": "https://github.com/darth-philou/phn-fp-lib/issues"
+    },
+    "homepage": "https://github.com/darth-philou/phn-fp-lib#readme",
+    "devDependencies": {
+        "@commitlint/cli": "^19.7.1",
+        "@commitlint/config-conventional": "^19.7.1",
+        "@eslint/js": "^9.21.0",
+        "eslint": "^9.21.0",
+        "eslint-config-prettier": "^10.0.1",
+        "eslint-plugin-jest": "^28.11.0",
+        "eslint-plugin-prettier": "^5.2.3",
+        "globals": "^16.0.0",
+        "jest": "^29.7.0",
+        "prettier": "^3.5.2"
+    },
+    "jest": {
+        "verbose": true,
+        "collectCoverage": true,
+        "reporters": [
+            "default"
+        ],
+        "projects": [
+            {
+                "displayName": "phn-fp-lib",
+                "testEnvironment": "node",
+                "testMatch": [
+                    "<rootDir>/src/**/*.spec.{js,jsx}"
+                ],
+                "collectCoverageFrom": [
+                    "<rootDir>/src/**/*.{js,jsx}"
+                ],
+                "coverageDirectory": "coverage"
+            }
+        ]
+    }
+}
