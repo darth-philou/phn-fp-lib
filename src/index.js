@@ -5,5 +5,5 @@
  * 23 février 2025
  */
 
-const { Try } = require('./src/try');
+const { Try } = require('./try');
 module.exports = { Try };
