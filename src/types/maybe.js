@@ -80,6 +80,15 @@ class Maybe {
 
         return this;
     }
+
+    // Matching
+    match({ just, nothing}) {
+        if (this.isJust) {
+            return just(this[VALUE]);
+        } else {
+            return nothing();
+        }
+    }
 }
 
 module.exports = { Maybe };

@@ -310,4 +310,28 @@ describe('Result', () => {
         expect(result).toBe(m1);
         expect(log).toHaveBeenCalledWith(1);
     });
+
+    test('doit fournir une opération match avec callback pour le type Ok', () => {
+        const m1 = new Result(1);
+        const ok = jest.fn().mockImplementation(() => 42);
+        const error = jest.fn();
+        
+        const result = m1.match({ ok, error });
+
+        expect(result).toBe(42);
+        expect(ok).toHaveBeenCalledWith(1);
+        expect(error).not.toHaveBeenCalled();
+    });
+
+    test('doit fournir une opération match avec callback pour le type Error', () => {
+        const m1 = Result.error('error');
+        const ok = jest.fn();
+        const error = jest.fn().mockImplementation(() => 42);
+        
+        const result = m1.match({ ok, error });
+
+        expect(result).toBe(42);
+        expect(error).toHaveBeenCalledWith('error');
+        expect(ok).not.toHaveBeenCalled();
+    });
 });

@@ -281,4 +281,28 @@ describe('Maybe', () => {
         expect(result).toBe(m1);
         expect(log).toHaveBeenCalledWith(1);
     });
+
+    test('doit fournir une opération match avec callback pour le type Just', () => {
+        const m1 = new Maybe(1);
+        const just1 = jest.fn().mockImplementation(() => 42);
+        const nothing1 = jest.fn();
+        
+        const result = m1.match({ just: just1, nothing: nothing1 });
+
+        expect(result).toBe(42);
+        expect(just1).toHaveBeenCalledWith(1);
+        expect(nothing1).not.toHaveBeenCalled();
+    });
+
+    test('doit fournir une opération match avec callback pour le type Nothing', () => {
+        const m1 = new Maybe();
+        const just1 = jest.fn();
+        const nothing1 = jest.fn().mockImplementation(() => 42);
+        
+        const result = m1.match({ just: just1, nothing: nothing1 });
+
+        expect(result).toBe(42);
+        expect(nothing1).toHaveBeenCalledTimes(1);
+        expect(just1).not.toHaveBeenCalled();
+    });
 });

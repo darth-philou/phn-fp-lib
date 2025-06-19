@@ -108,6 +108,16 @@ class Result {
             return Result.error(error);
         }
     }
+
+    // Matching
+    match({ ok, error}) {
+        if (this.isOk) {
+            return ok(this[VALUE]);
+        } else {
+            return error(this[VALUE]);
+        }
+    }
+
 }
 
 module.exports = { Result };
