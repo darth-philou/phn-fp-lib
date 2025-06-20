@@ -25,13 +25,13 @@ class Task {
     }
 
     // Apply fantasy-land/ap https://github.com/fantasyland/fantasy-land?tab=readme-ov-file#fantasy-landap-method
-    ap(effect) {
-        if (!(effect instanceof Task)) {
+    ap(task) {
+        if (!(task instanceof Task)) {
             throw new TypeError('ap argument must be an Task object encapsulating a function');
         }
 
         return new Task(({ reject, resolve }) =>
-            effect[fork]({ reject, resolve: fn => this[fork]({ reject, resolve: compose(resolve, fn) }) })
+            task[fork]({ reject, resolve: fn => this[fork]({ reject, resolve: compose(resolve, fn) }) })
         );
     }
 
@@ -64,13 +64,21 @@ class Task {
     }
 
     // Exécution différée
-    run() {
+    match({ onResolved = x => x, onRejected = x => x, onFinally = () => {} }) {
         return new Promise((resolve, reject) => {
             this[fork]({
                 resolve: value => resolve(value),
                 reject: error => reject(error)
             });
-        });
+        })
+            .then(onResolved)
+            .catch(onRejected)
+            .finally(onFinally);
+    }
+
+    // Opération tap
+    tap(fn) {
+        return this.map(x => (fn(x), x));
     }
 }
 

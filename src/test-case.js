@@ -3,13 +3,8 @@
  */
 
 const { pipe, prop } = require('ramda');
-const { object, string } = require('yup');
+const { object, number } = require('yup');
 const { tap, map, chain, maybeToResult } = require('./utils');
-
-const apiParameterSchema = object({
-    name: string().required(),
-    value: string().required()
-});
 
 // Placeholder
 const logger = {
@@ -59,7 +54,8 @@ console.info(
     })
 );
 
-// Test3: introduction du type Result permettant l'exécution d'une opération (synchrone) qui peut échouer (i.e. renvoyer une exception)
+// Test3
+// introduction du type Result permettant l'exécution d'une opération (synchrone) qui peut échouer (i.e. renvoyer une exception)
 console.info('-----');
 const { Result } = require('./types/result');
 const unsafeOperation = x =>
@@ -93,5 +89,53 @@ console.info(
     test3({ value: 1 }).match({
         ok: x => ({ sucess: true, result: x }),
         error: error => ({ success: false, result: error.message })
+    })
+);
+
+// Test 4
+// Introduction de Task. C'est un ADT qui permet un style déclaratif pour les Promise, exécutée uniquement au moment du déclenchement.
+console.info('-----');
+const { Task } = require('./types/task');
+const test4Schema = object({
+    value: number().required()
+});
+const assertInput = schema => input => new Task(({ reject, resolve }) => schema.validate(input).then(resolve).catch(reject));
+const mockAPICall = input =>
+    input >= 10
+        ? Task.rejected({ success: false, reason: 'Unknown error' })
+        : Task.of({ success: true, result: input * 10 });
+const test4 = pipe(
+    Maybe.of,
+    tap(logger.infoF('[test4] Api handler started with:')),
+    maybeToTask, // transmutation du Maybe en Task pour continuer le chainage
+    chain(assertInput(test4Schema)), // usage de chain pour éviter l'imbrication : assertInput renvoie déjà une Task
+    map(prop('value')),
+    map(x => x + 1),
+    chain(mockAPICall), // usage de chain pour éviter l'imbrication : mockAPICall renvoie aussi une Task
+    map(({ success, result }) => ({ success, result: result + 1})),
+    tap(logger.infoF('[test4] Result:'))
+);
+console.info(
+    'Exécution Test 4:',
+    test4({ value: 1 }).match({
+        onResolved: x => { console.info('[test4] resolved:', x); },
+        onRejected: x => { console.info('[test4] rejected:', x); },
+        onFinally: () => {
+            console.info('[test4] cleanup resources');
+        }
+    })
+);
+console.info(
+    'Exécution Test 4b:',
+    test4({ value: 9 }).match({
+        onResolved: x => { console.info('[test4b] resolved:', x); },
+        onRejected: x => { console.info('[test4b] rejected:', x); }
+    })
+);
+console.info(
+    'Exécution Test 4c:',
+    test4({ foo: 'bar' }).match({
+        onResolved: x => { console.info('[test4c] resolved:', x); },
+        onRejected: x => { console.info('[test4c] rejected:', x.message); }
     })
 );

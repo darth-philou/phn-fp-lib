@@ -5,16 +5,26 @@
 const { Task } = require('./task');
 
 describe('Task', () => {
+    test("doit être construit à partir d'une fonction", () => {
+        expect(new Task(() => {})).toBeInstanceOf(Task);
+        expect(() => new Task(1)).toThrow();
+        expect(() => new Task(false)).toThrow();
+        expect(() => new Task('foo')).toThrow();
+        expect(() => new Task([1])).toThrow();
+        expect(() => new Task({ foo: 'bar' })).toThrow();
+        expect(() => new Task()).toThrow();
+    });
+
     // Une Task doit fournir une opération run
-    test("doit fournir une opération run qui lance l'exécution différée de la tâche", () => {
+    test("doit fournir une opération match qui lance l'exécution différée de la tâche", () => {
         const effect = Task.of(42);
 
-        expect(typeof effect.run).toBe('function');
+        expect(typeof effect.match).toBe('function');
 
         const reject = jest.fn();
-        effect.run({
-            reject,
-            resolve: value => {
+        effect.match({
+            onRejected: reject,
+            onResolved: value => {
                 expect(value).toBe(42);
             }
         });
@@ -22,16 +32,18 @@ describe('Task', () => {
         expect(reject).toHaveBeenCalledTimes(0);
     });
 
-    test("doit fournir une opération run qui traite de l'échec de la tache", () => {
+    test("doit fournir une opération match qui traite de l'échec de la tache", () => {
         const effect = Task.rejected(42);
 
         const resolve = jest.fn();
-        effect.run({
-            reject: value => {
-                expect(value).toBe(42);
-            },
-            resolve
-        }).catch(() => {});
+        effect
+            .match({
+                onRejected: value => {
+                    expect(value).toBe(42);
+                },
+                onResolved: resolve
+            })
+            .catch(() => {});
 
         expect(resolve).toHaveBeenCalledTimes(0);
     });
@@ -40,13 +52,13 @@ describe('Task', () => {
         const always = jest.fn();
         const resolvedTask = Task.of(42).finally(always);
 
-        resolvedTask.run({});
+        resolvedTask.match({});
 
         expect(always).toHaveBeenCalledTimes(1);
 
         const rejectedTask = Task.rejected(42).finally(always);
 
-        rejectedTask.run({}).catch(() => {});
+        rejectedTask.match({}).catch(() => {});
 
         expect(always).toHaveBeenCalledTimes(2);
     });
@@ -61,8 +73,8 @@ describe('Task', () => {
         const try2 = try1.map(x => x + 1);
         expect(try2).toBeInstanceOf(Task);
 
-        try2.run({
-            resolve: value => {
+        try2.match({
+            onResolved: value => {
                 expect(value).toBe(2);
             }
         });
@@ -74,8 +86,8 @@ describe('Task', () => {
 
         const try2 = try1.map(x => x);
         expect(try2).toBeInstanceOf(Task);
-        try2.run({
-            resolve: value => {
+        try2.match({
+            onResolved: value => {
                 expect(value).toBe(1);
             }
         });
@@ -90,13 +102,13 @@ describe('Task', () => {
         const try2 = try1.map(f).map(g);
         const try3 = try1.map(x => g(f(x)));
 
-        try2.run({
-            resolve: value => {
+        try2.match({
+            onResolved: value => {
                 expect(value).toBe(4);
             }
         });
-        try3.run({
-            resolve: value => {
+        try3.match({
+            onResolved: value => {
                 expect(value).toBe(4);
             }
         });
@@ -112,8 +124,8 @@ describe('Task', () => {
         const try2 = try1.ap(f);
 
         expect(try2).toBeInstanceOf(Task);
-        try2.run({
-            resolve: value => {
+        try2.match({
+            onResolved: value => {
                 expect(value).toBe(2);
             }
         });
@@ -130,16 +142,23 @@ describe('Task', () => {
         const try2 = try1.ap(af.ap(ag.map(f => g => x => f(g(x)))));
         const try3 = try1.ap(af).ap(ag);
 
-        try2.run({
-            resolve: value => {
+        try2.match({
+            onResolved: value => {
                 expect(value).toBe(4);
             }
         });
-        try3.run({
-            resolve: value => {
+        try3.match({
+            onResolved: value => {
                 expect(value).toBe(4);
             }
         });
+    });
+
+    test("ap ne doit accepter qu'un argument de type Task", () => {
+        const try1 = Task.of(1);
+        const f = x => x + 1;
+
+        expect(() => try1.ap(f)).toThrow();
     });
 
     test("doit être de type Chain et fournir une opération 'chain'", () => {
@@ -152,8 +171,8 @@ describe('Task', () => {
         const try2 = try1.chain(f);
 
         expect(try2).toBeInstanceOf(Task);
-        try2.run({
-            resolve: value => {
+        try2.match({
+            onResolved: value => {
                 expect(value).toBe(2);
             }
         });
@@ -168,13 +187,13 @@ describe('Task', () => {
         const try2 = try1.chain(f).chain(g);
         const try3 = try1.chain(x => f(x).chain(g));
 
-        try2.run({
-            resolve: value => {
+        try2.match({
+            onResolved: value => {
                 expect(value).toBe(4);
             }
         });
-        try3.run({
-            resolve: value => {
+        try3.match({
+            onResolved: value => {
                 expect(value).toBe(4);
             }
         });
@@ -195,8 +214,8 @@ describe('Task', () => {
         const try2 = Task.of(x => x);
         const try3 = try1.ap(try2);
 
-        try3.run({
-            resolve: value => {
+        try3.match({
+            onResolved: value => {
                 expect(value).toBe(1);
             }
         });
@@ -207,15 +226,15 @@ describe('Task', () => {
         const f = x => x + 1;
 
         const left = Task.of(1).ap(Task.of(f));
-        left.run({
-            resolve: value => {
+        left.match({
+            onResolved: value => {
                 expect(value).toBe(2);
             }
         });
 
         const right = Task.of(f(1));
-        right.run({
-            resolve: value => {
+        right.match({
+            onResolved: value => {
                 expect(value).toBe(2);
             }
         });
@@ -227,15 +246,15 @@ describe('Task', () => {
         const f = x => x + 1;
 
         const left = Task.of(x).ap(Task.of(f));
-        left.run({
-            resolve: value => {
+        left.match({
+            onResolved: value => {
                 expect(value).toBe(2);
             }
         });
 
         const right = Task.of(f).ap(Task.of(f => f(x)));
-        right.run({
-            resolve: value => {
+        right.match({
+            onResolved: value => {
                 expect(value).toBe(2);
             }
         });
@@ -247,8 +266,8 @@ describe('Task', () => {
         const f = x => x + 1;
 
         const left = Task.of(a).chain(x => Task.of(f(x)));
-        left.run({
-            resolve: value => {
+        left.match({
+            onResolved: value => {
                 expect(value).toBe(f(a));
             }
         });
@@ -257,8 +276,8 @@ describe('Task', () => {
     test("doit être un Monade et respecter la loi de l'identité à droite", () => {
         // m['fantasy-land/chain'](M['fantasy-land/of']) is equivalent to m
         const left = Task.of(1).chain(Task.of);
-        left.run({
-            resolve: value => {
+        left.match({
+            onResolved: value => {
                 expect(value).toBe(1);
             }
         });
