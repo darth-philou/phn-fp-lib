@@ -2,7 +2,7 @@
  * Exemple d'usage
  */
 
-const { pipe, prop } = require('ramda');
+const { pipe, prop, ifElse, gte } = require('ramda');
 const { object, number } = require('yup');
 const { tap, map, chain, maybeToResult } = require('./utils');
 
@@ -137,5 +137,37 @@ console.info(
     test4({ foo: 'bar' }).match({
         onResolved: x => { console.info('[test4c] resolved:', x); },
         onRejected: x => { console.info('[test4c] rejected:', x.message); }
+    })
+);
+
+// Test 5
+// Démonstration d'une branche fonctionnelle
+console.info('-----');
+
+// Ici, les exemples prix sont simples ; mais on pourrait imaginer des appels API ou des traitements plus complexes,
+// l'important est que la structure de données renvoyée par les deux branches soit la même
+const mockAPICall1 = input => Task.of({ success: true, result: input * 10 });
+const mockAPICall2 = input => Task.of({ success: true, result: input * 100 });
+const test5 = pipe(
+    Maybe.of,
+    tap(logger.infoF('[test5] Api handler started with:')),
+    maybeToTask, // transmutation du Maybe en Task pour continuer le chainage
+    chain(assertInput(test4Schema)), // usage de chain pour éviter l'imbrication : assertInput renvoie déjà une Task
+    map(prop('value')),
+    chain(ifElse(gte(10), mockAPICall1, mockAPICall2)), // usage de chain pour éviter l'imbrication : mockAPICall renvoie aussi une Task
+    tap(logger.infoF('[test5] Result:'))
+);
+console.info(
+    'Exécution Test 5a:',
+    test5({ value: 1 }).match({
+        onResolved: x => { console.info('[test5a] resolved:', x); },
+        onRejected: x => { console.info('[test5a] rejected:', x); }
+    })
+);
+console.info(
+    'Exécution Test 5b:',
+    test5({ value: 100 }).match({
+        onResolved: x => { console.info('[test5b] resolved:', x); },
+        onRejected: x => { console.info('[test5b] rejected:', x); }
     })
 );
